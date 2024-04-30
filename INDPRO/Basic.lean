@@ -77,8 +77,7 @@ open Definite_formula
 deriving instance DecidableEq for Term
 deriving instance DecidableEq for Goal_formula
 deriving instance DecidableEq for Definite_formula
--- infixl:9 " :. " => Term.app
--- variable(a b : Term pre const var)
+
 
 inductive term_has_type {fe : FunEnv const_idents } {pi : PreEnv pred_idents} : TyEnv var_idents -> Term pred_idents const_idents var_idents -> type -> Prop where
 | Var {Δ : TyEnv var_idents} {x : var_idents} {τ : type} :
@@ -112,40 +111,6 @@ inductive term_has_type {fe : FunEnv const_idents } {pi : PreEnv pred_idents} : 
 |Pred_arg_p  {Δ : TyEnv var_idents}   {c : Term pred_idents const_idents var_idents} {p : ρ}:
   term_has_type Δ (c) (type.Predicate p)
  -> term_has_type Δ (c) (type.Predicate_Arg (σ.p_promote p))
-
-
-
-inductive wrong_term_has_type  : TyEnv var_idents -> Term pred_idents const_idents var_idents -> type -> Prop where
-| App_con {Δ : TyEnv var_idents} {s t : Term pred_idents const_idents var_idents} {left:κ} {right: γ}:
-  wrong_term_has_type Δ (s) (Constructor (γ.arrow left right))
-  -> wrong_term_has_type Δ t ( Constructor_Arg  left)
-  -> wrong_term_has_type Δ (Term.app s t ) (Constructor right)
-
-
-| App_pre {Δ : TyEnv var_idents} {s t : Term pred_idents const_idents var_idents} {left: σ} {right: ρ}:
-  wrong_term_has_type Δ (s) (Predicate (ρ.arrow left right))
-  -> wrong_term_has_type Δ t ( Predicate_Arg  left)
-  -> wrong_term_has_type Δ (Term.app s t ) (Predicate right)
-
-| Cst  {Δ : TyEnv var_idents}{fe : FunEnv const_idents } {c : const_idents} {y : γ} :
-  (fe c = y) -> wrong_term_has_type Δ (Term.const c) (type.Constructor y)
-
-| Cst_arg  {Δ : TyEnv var_idents}   {c : Term pred_idents const_idents var_idents} {y : γ}:
-  wrong_term_has_type Δ (c) (type.Constructor y)
- -> wrong_term_has_type Δ (c) (type.Constructor_Arg (κ.promote y))
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -210,8 +175,6 @@ def break_ (D : Definite_formula pred_idents const_idents var_idents) :  Prod (G
     | Definite_formula.cst_any _ G p cst v =>  (G , Goal_formula.Atomic (Term.app (Term.pred p) (cst_List_app pred_idents const_idents var_idents cst v)))
     | Definite_formula.CandD _ _=>  (Goal_formula.true , Goal_formula.true)
 
-  -- | CI {Δ : TyEnv var} { new : TyEnv var} {Ly : List (Term pre const var)} {G : Goal_formula const pre var} {A : Term pre const var} :
-  -- term_has_type const pre var Δ Ly
 inductive Definite_formula_has_type : TyEnv var_idents-> Definite_formula pred_idents const_idents var_idents-> type -> Prop
 |CI_nor  {Δ : TyEnv var_idents} {G : Goal_formula pred_idents const_idents var_idents} {y : List var_idents} {t : List σ} {P : pred_idents} :
 Goal_formula_has_type pred_idents const_idents var_idents (list_extend var_idents Δ y t) G (type.Predicate ρ.o) ->
@@ -243,7 +206,6 @@ Prove_Goal_formula D A_
 
 end
 /- section end-/
-
 
 namespace LazyIO
 
@@ -411,7 +373,7 @@ end LazyIO
 
 
 namespace simple
- /-con set and pre set-/  /-con set and pre set-/  /-con set and pre set-/  /-con set and pre set-/  /-con set and pre set-/
+
 inductive con_set where
  | Z : con_set
  | S : con_set
@@ -422,17 +384,11 @@ inductive pre_set where
 inductive var_set where
 |  v : var_set
 
- /-con set and pre set-/  /-con set and pre set-/  /-con set and pre set-/  /-con set and pre set-/  /-con set and pre set-/
-
 def Sigma (x :con_set):=
   match x with
     | con_set.Z => γ.ι
     | con_set.S => γ.arrow  (κ.promote γ.ι ) γ.ι
 
--- def incorrect_Sigma (x :con_set):=
---   match x with
---     | con_set.Z => γ.ι
---     | con_set.S => γ.ι
 
 def Pi (x : pre_set):=
   match x with
@@ -448,11 +404,6 @@ deriving instance DecidableEq for var_set
 open var_set
 open pre_set
 open con_set
-
-
-#check @term_has_type pre_set con_set var_set Sigma Pi Δ
-(Term.app (Term.app (Term.pred pre_set.Leq) (Term.app (Term.const con_set.S) (Term.const con_set.Z))) (Term.const con_set.Z)) (type.Predicate ρ.o)
-
 
 theorem Z_ : @term_has_type pre_set con_set var_set Sigma Pi Δ (Term.const Z) (type.Constructor γ.ι) :=
 have sub : Sigma Z = γ.ι := by rfl
@@ -483,39 +434,4 @@ theorem Leq_SZ_Z : @term_has_type pre_set con_set var_set Sigma Pi Δ (Term.app 
 def Leq_SZ_Z_ : Goal_formula pre_set con_set var_set := Goal_formula.Atomic
 (Term.app (Term.app (Term.pred pre_set.Leq) (Term.app (Term.const con_set.S) (Term.const con_set.Z))) (Term.const con_set.Z))
 
--- theorem Z__ : @term_has_type pre_set con_set var_set incorrect_Sigma Pi Δ (Term.const con_set.Z) (type.Constructor γ.ι) :=
--- have sub : Sigma con_set.Z = γ.ι := by rfl
--- term_has_type.Cst  sub
-
--- -- theorem Z_con_arg : @term_has_type pre_set con_set var_set incorrect_Sigma Pi Δ (Term.const Z) (type.Constructor_Arg (κ.promote γ.ι)) :=
--- -- term_has_type.Cst_arg Z_
-
--- theorem S___ : @term_has_type pre_set con_set var_set incorrect_Sigma Pi Δ (Term.const S) (type.Constructor  (γ.arrow  (κ.promote γ.ι ) γ.ι)) :=
--- have sub : Sigma S = γ.arrow  (κ.promote γ.ι ) γ.ι := by rfl
--- term_has_type.Cst sub
-
--- theorem incorrect_SZ : @term_has_type pre_set con_set var_set incorrect_Sigma Pi Δ (Term.app (Term.const S) (Term.const Z)) (type.Constructor γ.ι) :=
--- term_has_type.App_con S_ Z_con_arg
-
-
-
--- theorem incorrect_Z : wrong_term_has_type pre_set con_set var_set Δ (Term.const Z) (type.Constructor γ.ι) :=
--- have sub : incorrect_Sigma Z = γ.ι := by rfl
--- wrong_term_has_type.Cst  sub
-
--- theorem incorrect_Z_con_arg : wrong_term_has_type pre_set con_set var_set Δ (Term.const Z) (type.Constructor_Arg (κ.promote γ.ι)) :=
--- wrong_term_has_type.Cst_arg incorrect_Z
-
--- theorem incorrect_S : wrong_term_has_type pre_set con_set var_set Δ (Term.const S) (type.Constructor  (γ.arrow  (κ.promote γ.ι ) γ.ι)) :=
--- have sub : Sigma S = γ.arrow  (κ.promote γ.ι ) γ.ι := by rfl
--- wrong_term_has_type.Cst sub
-
--- theorem incorrect_SZ : wrong_term_has_type pre_set con_set var_set Δ (Term.app (Term.const S) (Term.const Z)) (type.Constructor γ.ι) :=
--- wrong_term_has_type.App_con incorrect_S incorrect_Z_con_arg
-
-
 end simple
-
-
--- theorem incorrect_SZ_ : wrong_term_has_type  Sigma Pi Δ (Term.app (Term.const S) (Term.const Z)) (type.Constructor γ.ι) :=
--- have Z_ : wrong_term_has_type
