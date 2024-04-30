@@ -275,6 +275,7 @@ inductive con_set where
  | id : con_set
  | putStrLn : con_set
  | putCont : con_set
+ | bracket : con_set
 deriving Repr
 
 inductive var_set where
@@ -305,7 +306,7 @@ def D_5 : Definite_formula pre_set con_set var_set :=  Definite_formula.cst_any 
 def D_6 : Definite_formula pre_set con_set var_set :=  Definite_formula.cst_any [h,k] (Goal_formula.Atomic (Term.app (Term.pred V) (Term.app (Term.var k) (Term.const c)))) V con_set.close [h,k]
 def D_7 : Definite_formula pre_set con_set var_set :=  Definite_formula.cst_any [h, k] (Goal_formula.Atomic (Term.app (Term.pred Closed) (Term.var h))) V con_set.read [h, k]
 def D_8 : Definite_formula pre_set con_set var_set :=  Definite_formula.cst_any [h, k] (Goal_formula.GandH (Goal_formula.Atomic (Term.app (Term.pred Open) (Term.var h))) (Goal_formula.Atomic (Term.app (Term.pred Ex) (Term.app (Term.app (Term.pred Pred) (Term.var h)) (Term.var k))))) pre_set.V con_set.read [h,k]
-def D_9 : Definite_formula pre_set con_set var_set :=  Definite_formula.cst_any [k, y, h] (Goal_formula.Atomic (Term.app (Term.pred V) (Term.var k))) V putCont [k,y,h]
+def D_9 : Definite_formula pre_set con_set var_set :=  Definite_formula.cst_any [k, y, h] (Goal_formula.Atomic (Term.app (Term.pred V) (Term.const bracket))) V putCont [k,y,h]
 def D_10 : Definite_formula pre_set con_set var_set := Definite_formula.cst_any [x, h, k] (Goal_formula.Atomic (Term.app (Term.pred V) (Term.app (Term.app (Term.var x) (Term.var h)) (Term.app (Term.const putCont) (Term.var k))))) V con_set.putStrLn [x, h, k]
 /- D_11 correspondingt the goal-/
 def D_11 : Definite_formula pre_set con_set var_set := Definite_formula.cst_any [x , m , f , h , k] (Goal_formula.Atomic (Term.app (Term.pred V) (Term.app (Term.app (Term.const con_set.open) (Term.var h)) (Term.app (Term.app (Term.const con_set.withFile_1) (Term.var f)) (Term.var k))))) V con_set.withFile [x,m,f,h,k]
